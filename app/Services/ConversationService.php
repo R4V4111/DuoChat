@@ -6,12 +6,27 @@ namespace App\Services;
 
 use App\Models\Conversation;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 class ConversationService
 {
+    /**
+     * Find the conversation that includes a user.
+     */
+    public function findForUser(User $user): ?Conversation
+    {
+        return Conversation::query()
+            ->where(function (Builder $query) use ($user): void {
+                $query->where('user_one_id', $user->getKey())
+                    ->orWhere('user_two_id', $user->getKey());
+            })
+            ->with(['userOne', 'userTwo'])
+            ->first();
+    }
+
     /**
      * Find the conversation shared by two users.
      */

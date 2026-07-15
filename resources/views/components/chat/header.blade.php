@@ -1,9 +1,11 @@
+@props(['partner'])
+
 <header class="flex items-center justify-between border-b border-stone-200 bg-white px-4 py-4 sm:px-6" aria-label="Active conversation">
     <div class="flex items-center gap-3">
-        <span class="flex size-10 items-center justify-center rounded-full bg-[#E57373] text-sm font-semibold text-white">AR</span>
+        <span class="flex size-10 items-center justify-center rounded-full bg-[#E57373] text-sm font-semibold text-white">{{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($partner->name, 0, 1)) }}</span>
         <div>
-            <h1 class="font-semibold text-slate-900">Alex Rivera</h1>
-            <p class="text-sm text-slate-500">Online</p>
+            <h1 class="font-semibold text-slate-900">{{ $partner->name }}</h1>
+            <p class="text-sm text-slate-500">Private conversation</p>
         </div>
     </div>
 
