@@ -1,17 +1,19 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Dashboard') }}
-        </h2>
-    </x-slot>
+<x-chat-layout>
+    <x-slot:sidebar>
+        <x-chat.sidebar />
+    </x-slot:sidebar>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    {{ __("You're logged in!") }}
-                </div>
-            </div>
-        </div>
-    </div>
-</x-app-layout>
+    <section class="flex min-h-screen min-w-0 flex-1 flex-col bg-stone-100">
+        <x-chat.header />
+
+        <main class="flex-1 space-y-6 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8" aria-label="Chat messages">
+            <p class="text-center text-xs font-medium uppercase tracking-[0.16em] text-slate-400">Today</p>
+
+            <x-chat.message-bubble content="Hi! How is your day going?" time="10:22" />
+            <x-chat.message-bubble content="Really well, thank you. I am looking forward to catching up later." time="10:23" sent />
+            <x-chat.message-bubble content="Same here. See you this afternoon." time="10:24" />
+        </main>
+
+        <x-chat.message-input />
+    </section>
+</x-chat-layout>
