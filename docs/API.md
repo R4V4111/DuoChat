@@ -1,5 +1,5 @@
 GET /chat
 
-POST /messages
+POST /chat/send
 
 DELETE /messages/{id}

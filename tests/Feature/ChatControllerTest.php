@@ -61,6 +61,74 @@ class ChatControllerTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_an_authenticated_user_can_send_a_message(): void
+    {
+        $sender = User::factory()->create();
+        $partner = User::factory()->create();
+        $this->createConversation($sender, $partner);
+
+        $this->actingAs($sender)
+            ->post(route('chat.send'), ['body' => 'Hello'])
+            ->assertRedirect(route('chat'));
+    }
+
+    public function test_a_sent_message_is_stored_in_the_database(): void
+    {
+        $sender = User::factory()->create();
+        $partner = User::factory()->create();
+        $conversation = $this->createConversation($sender, $partner);
+
+        $this->actingAs($sender)
+            ->post(route('chat.send'), ['body' => '  Hello DuoChat  ']);
+
+        $this->assertDatabaseHas('messages', [
+            'conversation_id' => $conversation->id,
+            'sender_id' => $sender->id,
+            'body' => 'Hello DuoChat',
+        ]);
+    }
+
+    public function test_an_empty_message_is_rejected(): void
+    {
+        $sender = User::factory()->create();
+        $partner = User::factory()->create();
+        $this->createConversation($sender, $partner);
+
+        $this->from(route('chat'))
+            ->actingAs($sender)
+            ->post(route('chat.send'), ['body' => ''])
+            ->assertRedirect(route('chat'))
+            ->assertSessionHasErrors('body');
+
+        $this->assertDatabaseCount('messages', 0);
+    }
+
+    public function test_a_user_cannot_send_a_message_to_another_users_conversation(): void
+    {
+        $sender = User::factory()->create();
+        $partner = User::factory()->create();
+        $sendersConversation = $this->createConversation($sender, $partner);
+        $otherUser = User::factory()->create();
+        $otherPartner = User::factory()->create();
+        $otherConversation = $this->createConversation($otherUser, $otherPartner);
+
+        $this->actingAs($sender)
+            ->post(route('chat.send'), [
+                'body' => 'This must stay in my conversation.',
+                'conversation_id' => $otherConversation->id,
+            ])
+            ->assertRedirect(route('chat'));
+
+        $this->assertDatabaseHas('messages', [
+            'conversation_id' => $sendersConversation->id,
+            'sender_id' => $sender->id,
+        ]);
+        $this->assertDatabaseMissing('messages', [
+            'conversation_id' => $otherConversation->id,
+            'sender_id' => $sender->id,
+        ]);
+    }
+
     private function createConversation(User $firstUser, User $secondUser): Conversation
     {
         return Conversation::query()->create([
