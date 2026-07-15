@@ -1,0 +1,6 @@
+- [x] Setup Laravel
+- [x] Breeze
+- [x] Conversations
+- [ ] Messages
+- [ ] Realtime
+- [ ] Online Status

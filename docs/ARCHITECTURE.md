@@ -1,0 +1,19 @@
+Browser
+      │
+      ▼
+Laravel Route
+      │
+      ▼
+Controller
+      │
+      ▼
+Service
+      │
+      ▼
+Repository
+      │
+      ▼
+Model
+      │
+      ▼
+MySQL
