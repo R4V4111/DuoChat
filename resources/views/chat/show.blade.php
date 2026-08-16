@@ -3,7 +3,7 @@
         <x-chat.sidebar :partner="$partner" />
     </x-slot:sidebar>
 
-    <section class="flex min-h-screen min-w-0 flex-1 flex-col bg-stone-100 sm:h-screen">
+    <section class="flex min-h-screen min-w-0 flex-1 flex-col bg-stone-100 sm:!h-screen">
         <x-chat.header :partner="$partner" />
 
         <main class="flex-1 space-y-6 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8" aria-label="Chat messages">

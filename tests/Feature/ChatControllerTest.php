@@ -44,8 +44,9 @@ class ChatControllerTest extends TestCase
 
         $response->assertOk()
             ->assertViewIs('chat.show')
-            ->assertSee('sm:block')
-            ->assertSee('sm:h-screen')
+            ->assertSee('sm:!block')
+            ->assertSee('sm:!flex')
+            ->assertSee('sm:!h-screen')
             ->assertViewHas('conversation', fn (Conversation $viewConversation): bool => $viewConversation->is($conversation))
             ->assertViewHas('partner', fn (User $viewPartner): bool => $viewPartner->is($partner))
             ->assertViewHas('messages', function ($messages) use ($olderMessage, $newerMessage): bool {
