@@ -8,9 +8,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::redirect('/dashboard', '/chat')
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::get('/chat', [ChatController::class, 'show'])
     ->middleware('auth')
