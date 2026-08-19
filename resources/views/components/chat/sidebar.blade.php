@@ -20,7 +20,7 @@
                 <span class="block truncate font-semibold text-slate-900">{{ $partner->name }}</span>
                 <span class="mt-1 block truncate text-sm text-[#b75d5d]">Private conversation</span>
             </span>
-            <span class="size-2 shrink-0 rounded-full bg-[#E57373]" aria-hidden="true"></span>
+            <span class="size-2 shrink-0 rounded-full @if ($partner->isOnline()) bg-green-500 @else bg-gray-400 @endif" aria-hidden="true"></span>
         </a>
     </nav>
 
