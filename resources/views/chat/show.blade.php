@@ -15,6 +15,7 @@
                     :content="$message->body"
                     :sent="$message->sender_id === auth()->id()"
                     :time="$message->created_at->format('H:i')"
+                    :read-at="$message->read_at"
                 />
                 @empty
                     <p class="py-12 text-center text-sm text-slate-400">No messages yet. Send something sweet to begin.</p>

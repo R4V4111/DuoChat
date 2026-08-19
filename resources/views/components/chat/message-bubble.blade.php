@@ -1,4 +1,4 @@
-@props(['content', 'sent' => false, 'time'])
+@props(['content', 'sent' => false, 'time', 'readAt' => null])
 
 <article @class([
     'flex max-w-[85%] flex-col gap-1.5 sm:max-w-[70%]',
@@ -12,9 +12,28 @@
     ])>
         {{ $content }}
     </div>
-    <time @class([
-        'px-1 text-xs',
-        'text-[#c96767]' => $sent,
-        'text-slate-400' => ! $sent,
-    ])>{{ $time }}</time>
+    <div @class([
+        'flex items-center gap-1 px-1 text-xs',
+        'justify-end' => $sent,
+        'justify-start' => ! $sent,
+    ])>
+        <time @class([
+            'text-[#c96767]' => $sent,
+            'text-slate-400' => ! $sent,
+        ])>{{ $time }}</time>
+        @if ($sent)
+            @if ($readAt)
+                <!-- Double check - read -->
+                <svg class="size-3.5 text-[#c96767]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-label="Read">
+                    <polyline points="20 6 9 17 4 12" />
+                    <polyline points="14 6 3 17 -2 12" />
+                </svg>
+            @else
+                <!-- Single check - sent/delivered -->
+                <svg class="size-3.5 text-[#c96767]/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-label="Delivered">
+                    <polyline points="20 6 9 17 4 12" />
+                </svg>
+            @endif
+        @endif
+    </div>
 </article>
