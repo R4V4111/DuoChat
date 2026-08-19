@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Services;
 
 use App\Models\Conversation;
+use App\Models\Message;
 use App\Models\User;
 use App\Services\MessageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -64,6 +65,78 @@ class MessageServiceTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         app(MessageService::class)->send($outsider, $conversation, 'Hello');
+    }
+
+    public function test_it_marks_partner_messages_as_read(): void
+    {
+        $user = User::factory()->create();
+        $partner = User::factory()->create();
+        $conversation = $this->createConversation($user, $partner);
+
+        $unreadMessage1 = Message::query()->create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $partner->id,
+            'body' => 'Unread message 1',
+        ]);
+        $unreadMessage2 = Message::query()->create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $partner->id,
+            'body' => 'Unread message 2',
+        ]);
+        $alreadyReadMessage = Message::query()->create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $partner->id,
+            'body' => 'Already read',
+            'read_at' => now()->subMinute(),
+        ]);
+        $ownMessage = Message::query()->create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $user->id,
+            'body' => 'My message',
+        ]);
+
+        $updatedCount = app(MessageService::class)->markAsRead($user, $conversation);
+
+        $this->assertSame(2, $updatedCount);
+        $this->assertDatabaseHas('messages', [
+            'id' => $unreadMessage1->id,
+            'read_at' => now()->toDateTimeString(),
+        ]);
+        $this->assertDatabaseHas('messages', [
+            'id' => $unreadMessage2->id,
+            'read_at' => now()->toDateTimeString(),
+        ]);
+        $this->assertDatabaseHas('messages', [
+            'id' => $alreadyReadMessage->id,
+            'read_at' => $alreadyReadMessage->read_at->toDateTimeString(),
+        ]);
+        $this->assertDatabaseHas('messages', [
+            'id' => $ownMessage->id,
+            'read_at' => null,
+        ]);
+    }
+
+    public function test_it_returns_zero_when_no_unread_partner_messages_exist(): void
+    {
+        $user = User::factory()->create();
+        $partner = User::factory()->create();
+        $conversation = $this->createConversation($user, $partner);
+
+        Message::query()->create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $partner->id,
+            'body' => 'Already read',
+            'read_at' => now(),
+        ]);
+        Message::query()->create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $user->id,
+            'body' => 'My message',
+        ]);
+
+        $updatedCount = app(MessageService::class)->markAsRead($user, $conversation);
+
+        $this->assertSame(0, $updatedCount);
     }
 
     private function createConversation(User $firstUser, User $secondUser): Conversation

@@ -30,6 +30,8 @@ class ChatController extends Controller
 
         abort_if($conversation === null, 404);
 
+        $this->messageService->markAsRead($user, $conversation);
+
         $partner = $conversation->user_one_id === $user->id
             ? $conversation->userTwo
             : $conversation->userOne;

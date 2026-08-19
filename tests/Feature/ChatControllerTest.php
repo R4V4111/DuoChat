@@ -132,6 +132,67 @@ class ChatControllerTest extends TestCase
         ]);
     }
 
+    public function test_it_marks_partner_messages_as_read_when_opening_chat(): void
+    {
+        $user = User::factory()->create();
+        $partner = User::factory()->create();
+        $conversation = $this->createConversation($user, $partner);
+
+        $unreadMessage = Message::query()->create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $partner->id,
+            'body' => 'Unread from partner',
+        ]);
+        $ownMessage = Message::query()->create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $user->id,
+            'body' => 'My message',
+        ]);
+        $alreadyReadMessage = Message::query()->create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $partner->id,
+            'body' => 'Already read',
+            'read_at' => now()->subMinute(),
+        ]);
+
+        $this->actingAs($user)->get(route('chat'))->assertOk();
+
+        $this->assertDatabaseHas('messages', [
+            'id' => $unreadMessage->id,
+            'read_at' => now()->toDateTimeString(),
+        ]);
+        $this->assertDatabaseHas('messages', [
+            'id' => $ownMessage->id,
+            'read_at' => null,
+        ]);
+        $this->assertDatabaseHas('messages', [
+            'id' => $alreadyReadMessage->id,
+            'read_at' => $alreadyReadMessage->read_at->toDateTimeString(),
+        ]);
+    }
+
+    public function test_it_does_not_change_read_at_on_subsequent_chat_visits(): void
+    {
+        $user = User::factory()->create();
+        $partner = User::factory()->create();
+        $conversation = $this->createConversation($user, $partner);
+
+        $message = Message::query()->create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $partner->id,
+            'body' => 'Message from partner',
+            'read_at' => now()->subHour(),
+        ]);
+
+        $this->actingAs($user)->get(route('chat'))->assertOk();
+        $firstReadAt = Message::query()->find($message->id)->read_at;
+
+        $this->actingAs($user)->get(route('chat'))->assertOk();
+        $secondReadAt = Message::query()->find($message->id)->read_at;
+
+        $this->assertEquals($firstReadAt, $secondReadAt);
+    }
+
     private function createConversation(User $firstUser, User $secondUser): Conversation
     {
         return Conversation::query()->create([

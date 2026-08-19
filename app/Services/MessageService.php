@@ -27,6 +27,17 @@ class MessageService
     }
 
     /**
+     * Mark messages from the partner as read for the given user.
+     */
+    public function markAsRead(User $user, Conversation $conversation): int
+    {
+        return $conversation->messages()
+            ->where('sender_id', '!=', $user->getKey())
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+    }
+
+    /**
      * Trim and validate a message body.
      */
     private function validatedBody(string $body): string
