@@ -1,10 +1,11 @@
 /**
  * Chat Alpine.js component for realtime messaging.
  */
-function chatApp(conversationId, sendUrl = '/chat/send') {
+function chatApp(conversationId, sendUrl = '/chat/send', readUrl = '/chat/read') {
     return {
         conversationId,
         sendUrl,
+        readUrl,
         message: '',
         echoChannel: null,
         messagesContainer: null,
@@ -29,6 +30,10 @@ function chatApp(conversationId, sendUrl = '/chat/send') {
 
                 this.echoChannel.listen('.message.sent', (event) => {
                     this.handleNewMessage(event);
+                });
+
+                this.echoChannel.listen('.messages.read', (event) => {
+                    this.handleMessagesRead(event);
                 });
             }
         },
@@ -97,6 +102,22 @@ function chatApp(conversationId, sendUrl = '/chat/send') {
             }
         },
 
+        async markConversationAsRead() {
+            try {
+                await fetch(this.readUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+            } catch (error) {
+                console.error('Failed to mark conversation as read:', error);
+            }
+        },
+
         renderAndAppend(message, isOwnMessage = false) {
             const messageHtml = this.renderMessageBubble(message, isOwnMessage);
             this.messagesList.insertAdjacentHTML('beforeend', messageHtml);
@@ -127,6 +148,53 @@ function chatApp(conversationId, sendUrl = '/chat/send') {
 
             this.renderAndAppend(message, false);
             this.scrollToBottom();
+
+            // When partner sends a message and we are actively on the page, mark as read
+            this.markConversationAsRead();
+        },
+
+        handleMessagesRead(event) {
+            if (event.conversation_id !== this.conversationId) {
+                return;
+            }
+
+            // If the reader is our partner, update indicators on our sent messages
+            if (event.reader_id !== this.userId) {
+                const messageIds = Array.isArray(event.message_ids) ? event.message_ids : [];
+
+                if (messageIds.length > 0) {
+                    messageIds.forEach((id) => {
+                        const messageEl = this.messagesList?.querySelector(`[data-message-id="${id}"]`);
+                        if (messageEl) {
+                            const indicator = messageEl.querySelector('[data-read-indicator]');
+                            if (indicator) {
+                                indicator.innerHTML = this.doubleCheckSvg();
+                            }
+                        }
+                    });
+                } else {
+                    this.messagesList?.querySelectorAll('[data-read-indicator]').forEach((indicator) => {
+                        indicator.innerHTML = this.doubleCheckSvg();
+                    });
+                }
+            }
+        },
+
+        doubleCheckSvg() {
+            return `
+                <svg class="size-3.5 text-[#c96767]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-label="Read">
+                    <polyline points="20 6 9 17 4 12" />
+                    <polyline points="14 6 3 17 -2 12" />
+                </svg>
+            `;
+        },
+
+        singleCheckSvg() {
+            return `
+                <svg class="size-3.5 text-[#c96767]/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-label="Delivered">
+                    <polyline points="20 6 9 17 4 12" />
+                </svg>
+            `;
         },
 
         renderMessageBubble(message, isOwnMessage = false) {
@@ -146,26 +214,16 @@ function chatApp(conversationId, sendUrl = '/chat/send') {
 
             let readIndicator = '';
             if (sent) {
-                if (readAt) {
-                    readIndicator = `
-                        <svg class="size-3.5 text-[#c96767]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-label="Read">
-                            <polyline points="20 6 9 17 4 12" />
-                            <polyline points="14 6 3 17 -2 12" />
-                        </svg>
-                    `;
-                } else {
-                    readIndicator = `
-                        <svg class="size-3.5 text-[#c96767]/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-label="Delivered">
-                            <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                    `;
-                }
+                const svg = readAt ? this.doubleCheckSvg() : this.singleCheckSvg();
+                readIndicator = `<span data-read-indicator class="inline-flex items-center">${svg}</span>`;
             }
 
-            const tempIdAttr = message.id?.toString().startsWith('temp-') ? `data-temp-id="${message.id}"` : '';
+            const idAttr = message.id?.toString().startsWith('temp-')
+                ? `data-temp-id="${message.id}"`
+                : (message.id ? `data-message-id="${message.id}"` : '');
 
             return `
-                <article class="flex max-w-[85%] flex-col gap-1.5 sm:max-w-[70%] ${bubbleClass}" ${tempIdAttr}>
+                <article class="flex max-w-[85%] flex-col gap-1.5 sm:max-w-[70%] ${bubbleClass}" ${idAttr}>
                     <div class="rounded-[18px] px-4 py-3 text-sm leading-6 ${bubbleStyle}">
                         ${this.escapeHtml(message.body)}
                     </div>

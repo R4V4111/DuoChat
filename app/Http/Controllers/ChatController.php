@@ -76,4 +76,22 @@ class ChatController extends Controller
 
         return to_route('chat');
     }
+
+    /**
+     * Mark unread messages in the authenticated user's conversation as read.
+     */
+    public function markRead(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $conversation = $this->conversationService->findForUser($user);
+
+        abort_if($conversation === null, 404);
+
+        $count = $this->messageService->markAsRead($user, $conversation);
+
+        return response()->json([
+            'marked_read_count' => $count,
+        ]);
+    }
 }

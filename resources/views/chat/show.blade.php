@@ -4,7 +4,7 @@
     </x-slot:sidebar>
 
     <section class="flex min-h-screen min-w-0 flex-1 flex-col bg-[#fffaf9] sm:!h-screen"
-        x-data="chatApp({{ $conversation->id }}, '{{ route('chat.send') }}')"
+        x-data="chatApp({{ $conversation->id }}, '{{ route('chat.send') }}', '{{ route('chat.read') }}')"
         x-init="initEcho()"
     >
         <x-chat.header :partner="$partner" />
@@ -15,6 +15,7 @@
             <div class="space-y-4" x-ref="messagesList">
                 @forelse ($messages as $message)
                 <x-chat.message-bubble
+                    :id="$message->id"
                     :content="$message->body"
                     :sent="$message->sender_id === auth()->id()"
                     :time="$message->created_at->format('H:i')"

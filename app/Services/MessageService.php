@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Events\MessageSent;
+use App\Events\MessagesRead;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
@@ -37,10 +38,27 @@ class MessageService
      */
     public function markAsRead(User $user, Conversation $conversation): int
     {
-        return $conversation->messages()
+        $this->ensureSenderBelongsToConversation($user, $conversation);
+
+        $unreadMessages = $conversation->messages()
             ->where('sender_id', '!=', $user->getKey())
             ->whereNull('read_at')
-            ->update(['read_at' => now()]);
+            ->get();
+
+        if ($unreadMessages->isEmpty()) {
+            return 0;
+        }
+
+        $now = now();
+        $messageIds = $unreadMessages->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        $conversation->messages()
+            ->whereIn('id', $messageIds)
+            ->update(['read_at' => $now]);
+
+        MessagesRead::dispatch($conversation, $messageIds, $now, (int) $user->getKey());
+
+        return count($messageIds);
     }
 
     /**

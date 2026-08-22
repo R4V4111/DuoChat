@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Services;
 
+use App\Events\MessagesRead;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
 use App\Services\MessageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use InvalidArgumentException;
 use Tests\TestCase;
 
@@ -137,6 +139,42 @@ class MessageServiceTest extends TestCase
         $updatedCount = app(MessageService::class)->markAsRead($user, $conversation);
 
         $this->assertSame(0, $updatedCount);
+    }
+
+    public function test_it_dispatches_messages_read_event_when_messages_are_marked_as_read(): void
+    {
+        Event::fake([MessagesRead::class]);
+
+        $user = User::factory()->create();
+        $partner = User::factory()->create();
+        $conversation = $this->createConversation($user, $partner);
+
+        $unreadMessage = Message::query()->create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $partner->id,
+            'body' => 'Unread message',
+        ]);
+
+        app(MessageService::class)->markAsRead($user, $conversation);
+
+        Event::assertDispatched(MessagesRead::class, function (MessagesRead $event) use ($conversation, $unreadMessage, $user): bool {
+            return $event->conversation->id === $conversation->id
+                && $event->messageIds === [$unreadMessage->id]
+                && $event->readerId === $user->id;
+        });
+    }
+
+    public function test_it_does_not_dispatch_messages_read_event_when_no_unread_messages(): void
+    {
+        Event::fake([MessagesRead::class]);
+
+        $user = User::factory()->create();
+        $partner = User::factory()->create();
+        $conversation = $this->createConversation($user, $partner);
+
+        app(MessageService::class)->markAsRead($user, $conversation);
+
+        Event::assertNotDispatched(MessagesRead::class);
     }
 
     private function createConversation(User $firstUser, User $secondUser): Conversation
