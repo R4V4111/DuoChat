@@ -3,7 +3,7 @@
 
     <div class="flex items-end gap-3 rounded-2xl border border-stone-200 bg-stone-50 p-2.5 shadow-sm focus-within:border-[#E57373] focus-within:ring-4 focus-within:ring-[#E57373]/10">
         <label for="message" class="sr-only">Message</label>
-        <textarea id="message" x-model="message" x-ref="messageInput" name="body" rows="1" placeholder="Write a message..." class="max-h-32 min-h-10 flex-1 resize-none border-0 bg-transparent px-2 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:ring-0"></textarea>
+        <textarea id="message" x-model="message" x-ref="messageInput" @keydown="handleKeydown($event)" name="body" rows="1" placeholder="Write a message..." class="max-h-32 min-h-10 flex-1 resize-none border-0 bg-transparent px-2 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:ring-0"></textarea>
         <button type="submit" :disabled="sending || !message.trim()" class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#E57373] text-white shadow-sm shadow-[#E57373]/30 transition hover:bg-[#D96767] focus:outline-none focus:ring-4 focus:ring-[#E57373]/30 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Send message">
             <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="m22 2-7 20-4-9-9-4Z" />

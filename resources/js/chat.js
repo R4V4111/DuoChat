@@ -33,7 +33,14 @@ function chatApp(conversationId, sendUrl = '/chat/send') {
             }
         },
 
-        // Called directly from message-input form via @submit.prevent
+        handleKeydown(event) {
+            if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+                event.preventDefault();
+                this.submitMessage();
+            }
+        },
+
+        // Called directly from message-input form via @submit.prevent or handleKeydown
         async submitMessage() {
             const body = this.message.trim();
             if (this.sending || !body) {
