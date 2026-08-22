@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Events\MessageSent;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
@@ -20,10 +21,15 @@ class MessageService
         $body = $this->validatedBody($body);
         $this->ensureSenderBelongsToConversation($sender, $conversation);
 
-        return $conversation->messages()->create([
+        $message = $conversation->messages()->create([
             'sender_id' => $sender->getKey(),
             'body' => $body,
         ]);
+
+        // Dispatch the realtime event after the message is created
+        MessageSent::dispatch($message->load('sender'), $conversation);
+
+        return $message;
     }
 
     /**

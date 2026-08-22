@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\ConversationService;
 use App\Services\MessageService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -47,7 +48,7 @@ class ChatController extends Controller
     /**
      * Store a message in the authenticated user's conversation.
      */
-    public function store(SendMessageRequest $request): RedirectResponse
+    public function store(SendMessageRequest $request): JsonResponse|RedirectResponse
     {
         /** @var User $user */
         $user = $request->user();
@@ -55,7 +56,23 @@ class ChatController extends Controller
 
         abort_if($conversation === null, 404);
 
-        $this->messageService->send($user, $conversation, $request->validated('body'));
+        $message = $this->messageService->send($user, $conversation, $request->validated('body'));
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => [
+                    'id' => $message->id,
+                    'conversation_id' => $message->conversation_id,
+                    'sender_id' => $message->sender_id,
+                    'body' => $message->body,
+                    'created_at' => $message->created_at?->toISOString(),
+                    'sender' => [
+                        'id' => $message->sender->id,
+                        'name' => $message->sender->name,
+                    ],
+                ],
+            ]);
+        }
 
         return to_route('chat');
     }
