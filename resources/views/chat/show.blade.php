@@ -4,7 +4,15 @@
     </x-slot:sidebar>
 
     <section class="flex min-h-screen min-w-0 flex-1 flex-col bg-[#fffaf9] sm:!h-screen"
-        x-data="chatApp({{ $conversation->id }}, '{{ route('chat.send') }}', '{{ route('chat.read') }}')"
+        x-data="chatApp(
+            {{ $conversation->id }},
+            '{{ route('chat.send') }}',
+            '{{ route('chat.read') }}',
+            '{{ route('chat.presence') }}',
+            {{ $partner->id }},
+            {{ $partner->isOnline() ? 'true' : 'false' }},
+            {{ $partner->last_seen_at ? "'".e($partner->last_seen_at->toISOString())."'" : 'null' }}
+        )"
         x-init="initEcho()"
     >
         <x-chat.header :partner="$partner" />
@@ -30,3 +38,4 @@
         <x-chat.message-input />
     </section>
 </x-chat-layout>
+

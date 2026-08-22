@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Events\UserPresenceUpdated;
 use App\Http\Requests\SendMessageRequest;
 use App\Models\User;
 use App\Services\ConversationService;
@@ -92,6 +93,32 @@ class ChatController extends Controller
 
         return response()->json([
             'marked_read_count' => $count,
+        ]);
+    }
+
+    /**
+     * Update the authenticated user's online presence and broadcast to partner.
+     */
+    public function updatePresence(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $conversation = $this->conversationService->findForUser($user);
+
+        abort_if($conversation === null, 404);
+
+        $status = $request->input('status', 'online');
+        $isOnline = $status === 'online';
+
+        $now = now();
+        $user->update(['last_seen_at' => $now]);
+
+        UserPresenceUpdated::dispatch($conversation, (int) $user->id, $isOnline, $now);
+
+        return response()->json([
+            'status' => $status,
+            'is_online' => $isOnline,
+            'last_seen_at' => $now->toISOString(),
         ]);
     }
 }

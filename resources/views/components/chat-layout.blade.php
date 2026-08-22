@@ -16,7 +16,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="bg-stone-100 font-['Inter'] text-slate-800 antialiased">
-        <div class="min-h-screen sm:!flex sm:!h-screen">
+        <div class="min-h-screen sm:!flex sm:!h-screen" {{ $attributes }}>
             <aside class="hidden w-80 shrink-0 border-r border-stone-200 bg-white sm:!block">
                 {{ $sidebar }}
             </aside>

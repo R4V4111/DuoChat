@@ -24,6 +24,10 @@ Route::post('/chat/read', [ChatController::class, 'markRead'])
     ->middleware(['auth', 'last.seen'])
     ->name('chat.read');
 
+Route::post('/chat/presence', [ChatController::class, 'updatePresence'])
+    ->middleware(['auth', 'last.seen'])
+    ->name('chat.presence');
+
 Route::middleware(['auth', 'last.seen'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

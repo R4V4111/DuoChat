@@ -1,12 +1,11 @@
 /**
  * Chat Alpine.js component for realtime messaging.
  */
-function chatApp(conversationId, sendUrl = '/chat/send', readUrl = '/chat/read') {
-    return {
+function chatApp(
         conversationId,
         sendUrl,
         readUrl,
-        message: '',
+        presenceUrl,
         echoChannel: null,
         messagesContainer: null,
         messagesList: null,
@@ -35,10 +34,10 @@ function chatApp(conversationId, sendUrl = '/chat/send', readUrl = '/chat/read')
                 this.echoChannel.listen('.messages.read', (event) => {
                     this.handleMessagesRead(event);
                 });
-            }
+
         },
 
-        handleKeydown(event) {
+        async announcePresence(status = 'online') {
             if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
                 event.preventDefault();
                 this.submitMessage();
@@ -251,3 +250,4 @@ function chatApp(conversationId, sendUrl = '/chat/send', readUrl = '/chat/read')
 
 window.chatApp = chatApp;
 export default chatApp;
+

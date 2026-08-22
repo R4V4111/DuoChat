@@ -7,19 +7,20 @@
             <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[#b75d5d]">Private conversation</p>
             <h1 class="mt-1 text-lg font-semibold tracking-tight text-slate-900">{{ $partner->name }}</h1>
             <div class="mt-1 flex items-center gap-1.5">
-                @if ($partner->isOnline())
-                    <span class="size-1.5 rounded-full bg-green-500" aria-hidden="true"></span>
-                    <span class="text-xs text-green-600">Online</span>
-                @else
-                    <span class="size-1.5 rounded-full bg-gray-400" aria-hidden="true"></span>
-                    <span class="text-xs text-slate-400">
-                        @if ($partner->last_seen_at)
-                            Last seen {{ $partner->last_seen_at->diffForHumans() }}
-                        @else
-                            Never seen
-                        @endif
+                {{-- Online indicator --}}
+                <template x-if="partnerIsOnline">
+                    <span class="inline-flex items-center gap-1.5">
+                        <span class="size-1.5 rounded-full bg-green-500" aria-hidden="true"></span>
+                        <span class="text-xs text-green-600">Online</span>
                     </span>
-                @endif
+                </template>
+                {{-- Offline indicator --}}
+                <template x-if="!partnerIsOnline">
+                    <span class="inline-flex items-center gap-1.5">
+                        <span class="size-1.5 rounded-full bg-gray-400" aria-hidden="true"></span>
+                        <span class="text-xs text-slate-400" x-text="partnerLastSeenDiff"></span>
+                    </span>
+                </template>
             </div>
         </div>
     </div>
@@ -32,3 +33,4 @@
         </svg>
     </button>
 </header>
+
